@@ -1,9 +1,9 @@
 #############################
 # Author: Luke O'Connor     #
-# edited: 2025-11-17        #
+# edited: 2026-03-17        #
 #############################
 
-FROM rocker/rstudio:4.2.1
+FROM rocker/rstudio:4.5.1
 
 
 USER root 
@@ -11,47 +11,27 @@ RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
         libfontconfig1-dev\
+        libhdf5-dev\
         libmagick++-dev \
 #        libpng12-dev \
         libudunits2-dev \
         libxml2-dev \ 
+        libcurl4-openssl-dev\ 
+        libssl-dev\ 
+        libxml2-dev\
         zlib1g-dev \ 
     && apt-get clean
-#install packages of CRAN
-RUN R -e "install.packages( pkgs = c('here',\
-                                    'ggplot2',\
-                                    'matrixStats',\
-                                    'devtools',\
-                                    'knitr',\
-                                    'patchwork',\
-                                    'BiocManager',\
-                                    'Seurat',\
-                                    'dplyr',\
-                                    'openxlsx',\
-                                    'stringr'),\
-                                ask = FALSE,\
-                                dependencies = TRUE,\
-                                checkBuilt = TRUE,\
-                                repos= 'http://cran.rstudio.com/')"
+     
+# put R package script in image
+ADD install_r_packages.R /install_r_packages.R
 
-#install bioconductor packages
+RUN R -e "install.packages( pkgs = c('devtools'))"
+RUN R -e "library( 'devtools' )"
 
-RUN R -e "BiocManager::install( pkgs = c('RColorBrewer',\
-                                        'ComplexHeatmap',\
-                                        'GenomeInfoDb',\
-                                        'GenomicRanges',\
-                                        'Biobase',\
-                                        'IRanges',\
-                                        'XVector',\
-                                        'Biostrings',\
-                                        'GenomicRanges',\
-                                        'RhtsLib',\
-                                        'SummarizedExperiment',\
-                                        'KEGGREST',\
-                                        'annotate',\
-                                        'GenomicAlignments',\
-                                        'AnnotationDbi',\
-                                        'org.Mm.eg.db',\
-                                        'GO.db',\
-                                        'goseq',\
-                                        'biomart'))"
+RUN R -e "install.packages( pkgs = c('tidyverse'))"
+RUN R -e "library( 'tidyverse')"
+
+RUN R -e "install.packages( pkgs = c('enrichR'))"
+RUN R -e "library( 'enrichR')"
+# Run relevant R package installs
+RUN Rscript /install_r_packages.R
